@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stethoscope AI - Instant Server Diagnostics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .hero-bg {
+            background-image: radial-gradient(#1f2937 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .accent-color { color: #38bdf8; }
+        .btn-primary {
+            background-color: #0ea5e9;
+            color: #ffffff;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover { background-color: #0284c7; }
+        .code-block {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+        }
+        .report-content h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; border-bottom: 1px solid #374151; padding-bottom: 0.5rem; }
+        .report-content h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.25rem; }
+        .report-content p { margin-top: 0.75rem; line-height: 1.6; }
+        .report-content code { background-color: #374151; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: 'Courier New', Courier, monospace; }
+        .report-content pre { background-color: #1f2937; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; overflow-x: auto; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="min-h-screen">
+        <!-- SECTION 1: HERO -->
+        <section class="py-20 md:py-32 hero-bg">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-black text-white leading-tight">Instant, AI-Powered Diagnostics <br> for Your <span class="accent-color">Linux Server</span>.</h1>
+                <p class="mt-6 text-lg md:text-xl max-w-3xl mx-auto">Go from "Server Down" to "Root Cause Found" in under 60 seconds. Stethoscope AI is your on-demand expert consultant for complex server issues.</p>
+                <a href="#analyzer-tool" class="mt-10 inline-block btn-primary font-bold py-4 px-8 rounded-lg text-lg">Start Analysis Now</a>
+            </div>
+        </section>
+
+        <!-- SECTION 2: HOW IT WORKS -->
+        <section class="py-20 bg-gray-900">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center text-white">From Chaos to Clarity in 3 Simple Steps</h2>
+                <div class="mt-12 grid md:grid-cols-3 gap-12 text-center">
+                    <div class="step">
+                        <div class="flex items-center justify-center h-16 w-16 rounded-full bg-sky-500/20 mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">1. Get The Command</h3>
+                        <p class="mt-2">Copy our secure, 100% read-only bash command. No installation, no agents, no dependencies.</p>
+                    </div>
+                    <div class="step">
+                        <div class="flex items-center justify-center h-16 w-16 rounded-full bg-sky-500/20 mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">2. Run on Your Server</h3>
+                        <p class="mt-2">Execute it via SSH. It gathers a comprehensive, end-to-end encrypted snapshot of your system.</p>
+                    </div>
+                    <div class="step">
+                        <div class="flex items-center justify-center h-16 w-16 rounded-full bg-sky-500/20 mx-auto mb-4">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">3. Get AI-Powered Insights</h3>
+                        <p class="mt-2">Paste the encrypted output here and instantly receive your actionable report.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: THE TOOL -->
+        <section id="analyzer-tool" class="py-20">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center text-white">Generate Your Health Report</h2>
+                <div class="max-w-4xl mx-auto mt-12">
+                    <!-- Step 1 -->
+                    <div class="mb-12">
+                        <h3 class="text-xl font-semibold text-white mb-2">Step 1: Copy this command</h3>
+                        <div class="code-block rounded-lg p-4 flex items-center justify-between">
+                            <pre><code class="text-gray-300">curl -sSL https://get.stethoscope.ai/analyzer.sh | bash</code></pre>
+                            <button onclick="copyCommand()" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">Copy</button>
+                        </div>
+                    </div>
+                    <!-- Step 2 -->
+                    <div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Step 2: Paste the output from your terminal below</h3>
+                        <textarea id="snapshot-input" rows="8" class="w-full p-4 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 focus:ring-2 focus:ring-sky-500 focus:outline-none" placeholder="Paste your encrypted snapshot output here. It will be a large block of Base64 text..."></textarea>
+                        <button onclick="analyzeServer()" id="analyze-button" class="mt-4 w-full btn-primary font-bold py-4 px-8 rounded-lg text-lg">Analyze My Server</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: REPORT OUTPUT -->
+        <section id="report-section" class="py-20 bg-gray-900 hidden">
+             <div class="container mx-auto px-6 max-w-4xl">
+                <h2 class="text-3xl font-bold text-center text-white mb-8">Your AI-Generated Analysis</h2>
+                <div id="report-output" class="p-6 rounded-lg bg-gray-800 border border-gray-700">
+                    <!-- Loading state -->
+                    <div id="loading-indicator" class="text-center">
+                        <svg class="animate-spin h-8 w-8 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <p class="mt-4 text-lg">Your expert AI is analyzing the data... This may take a moment.</p>
+                    </div>
+                    <!-- Report content will be injected here -->
+                    <div id="report-content-wrapper" class="hidden"></div>
+                 </div>
+             </div>
+        </section>
+
+    </div>
+
+    <script>
+        function copyCommand() {
+            const command = 'curl -sSL https://get.stethoscope.ai/analyzer.sh | bash';
+            navigator.clipboard.writeText(command).then(() => {
+                alert('Command copied to clipboard!');
+            }, (err) => {
+                alert('Failed to copy command.');
+            });
+        }
+
+        async function analyzeServer() {
+            const snapshotInput = document.getElementById('snapshot-input');
+            const analyzeButton = document.getElementById('analyze-button');
+            const reportSection = document.getElementById('report-section');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const reportContentWrapper = document.getElementById('report-content-wrapper');
+
+            const encryptedData = snapshotInput.value.trim();
+            if (!encryptedData) {
+                alert('Please paste the snapshot output before analyzing.');
+                return;
+            }
+
+            // Show loading state and scroll to report section
+            reportSection.classList.remove('hidden');
+            loadingIndicator.classList.remove('hidden');
+            reportContentWrapper.classList.add('hidden');
+            reportContentWrapper.innerHTML = '';
+            analyzeButton.disabled = true;
+            analyzeButton.textContent = 'Analyzing...';
+            reportSection.scrollIntoView({ behavior: 'smooth' });
+
+            // --- API Call ---
+            // IMPORTANT: Replace with your actual backend API endpoint
+            const API_ENDPOINT = 'http://127.0.0.1:8000/api/v1/analyze';
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ data: encryptedData }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                // Use marked.js to convert Markdown response to HTML
+                reportContentWrapper.innerHTML = marked.parse(result.report);
+
+            } catch (error) {
+                reportContentWrapper.innerHTML = `<p class="text-red-400"><strong>Analysis Failed:</strong> ${error.message}</p>`;
+            } finally {
+                // Hide loading and show content
+                loadingIndicator.classList.add('hidden');
+                reportContentWrapper.classList.remove('hidden');
+                analyzeButton.disabled = false;
+                analyzeButton.textContent = 'Analyze My Server';
+            }
+        }
+    </script>
+
+</body>
+</html>
