@@ -1,4 +1,4 @@
-# main.py v2.0
+# main.py v2.1
 # To run this:
 # 1. pip install "fastapi[all]" uvicorn python-dotenv google-generativeai
 # 2. Create a .env file with your GEMINI_API_KEY
@@ -17,9 +17,9 @@ from dotenv import load_dotenv
 load_dotenv() # Load variables from .env file
 
 app = FastAPI(
-    title="Stethoscope AI API (v2)",
+    title="Stethoscope AI API (v2.1)",
     description="The backend service that analyzes encoded server data.",
-    version="2.0.0"
+    version="2.1.0"
 )
 
 # --- CORS Middleware ---
@@ -92,9 +92,9 @@ async def analyze_server(request: AnalyzeRequest):
         return {"status": "success", "report": final_report}
 
     except (base64.binascii.Error, json.JSONDecodeError) as e:
-        raise HTTPException(status_code=400, detail=f"Bad Request: Invalid data format. The provided data is not valid Base64 encoded JSON. {e}")
+        # IMPROVED ERROR HANDLING: Provide a clearer message for bad input.
+        raise HTTPException(status_code=400, detail=f"Invalid Data Format: The provided text is not a valid output from the analyzer script. Please re-run the script on your server and copy the entire output. (Error: {e})")
     except ConnectionError as e:
         raise HTTPException(status_code=503, detail=f"Service Unavailable: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
-
