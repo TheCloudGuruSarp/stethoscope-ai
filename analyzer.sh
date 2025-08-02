@@ -1,6 +1,7 @@
 #!/bin/bash
-# Stethoscope AI - Secure Snapshot Script v2.0
+# Stethoscope AI - Secure Snapshot Script v3.1
 # This script is read-only and outputs Base64 encoded JSON.
+# Fix: Correctly assembles the final JSON object to be valid.
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
@@ -14,7 +15,7 @@ encode_and_output() {
 }
 
 # --- DATA COLLECTION FUNCTIONS ---
-# Each function prints a JSON key-value pair with a trailing comma.
+# Each function now prints a JSON key-value pair WITH a trailing comma.
 
 get_os_info() {
     printf '"os_info": {'
@@ -57,7 +58,6 @@ get_memory_info() {
 
 get_disk_info() {
     printf '"disk_usage": ['
-    # Use 'df -P' for POSIX-compliant output that doesn't wrap lines.
     df -P | grep '^/dev/' | while read -r line; do
         printf '{'
         printf '"filesystem": "%s",' "$(echo "$line" | awk '{print $1}')"
@@ -67,47 +67,44 @@ get_disk_info() {
         printf '"use_percent": "%s",' "$(echo "$line" | awk '{print $5}')"
         printf '"mount_point": "%s"' "$(echo "$line" | awk '{print $6}')"
         printf '},'
-    done | sed '$s/,$//' # Remove trailing comma
+    done | sed '$s/,$//'
     printf '],'
 }
 
 get_top_processes() {
+    # This is the LAST data function, so it should NOT have a trailing comma.
     printf '"top_processes": ['
-    # Top 5 by CPU
-    ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | head -n 6 | tail -n 5 | while read -r line; do
+    ps_output=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | head -n 6 | tail -n 5 && ps -eo pid,user,%cpu,%mem,comm --sort=-%mem | head -n 6 | tail -n 5)
+    
+    first_line=true
+    echo "$ps_output" | while read -r line; do
+        if [ -z "$line" ]; then continue; fi
+        if [ "$first_line" = false ]; then
+            printf ','
+        fi
+        first_line=false
+        
         pid=$(echo "$line" | awk '{print $1}')
         user=$(echo "$line" | awk '{print $2}')
         cpu=$(echo "$line" | awk '{print $3}')
         mem=$(echo "$line" | awk '{print $4}')
         comm=$(echo "$line" | awk '{print $5}')
-        printf '{"type": "cpu", "pid": %s, "user": "%s", "cpu_percent": %s, "mem_percent": %s, "command": "%s"},' "$pid" "$user" "$cpu" "$mem" "$comm"
+        printf '{"pid": %s, "user": "%s", "cpu_percent": %s, "mem_percent": %s, "command": "%s"}' "$pid" "$user" "$cpu" "$mem" "$comm"
     done
-    # Top 5 by Memory
-    ps -eo pid,user,%cpu,%mem,comm --sort=-%mem | head -n 6 | tail -n 5 | while read -r line; do
-        pid=$(echo "$line" | awk '{print $1}')
-        user=$(echo "$line" | awk '{print $2}')
-        cpu=$(echo "$line" | awk '{print $3}')
-        mem=$(echo "$line" | awk '{print $4}')
-        comm=$(echo "$line" | awk '{print $5}')
-        printf '{"type": "memory", "pid": %s, "user": "%s", "cpu_percent": %s, "mem_percent": %s, "command": "%s"},' "$pid" "$user" "$cpu" "$mem" "$comm"
-    done | sed '$s/,$//' # Remove trailing comma
     printf ']'
 }
 
 # --- MAIN FUNCTION: ASSEMBLE ALL DATA ---
 main() {
-    local json_output
-    # Assemble the JSON string by calling all data gathering functions
-    json_output=$( (
-        printf '{'
-        get_os_info
-        get_hardware_info
-        get_performance_info
-        get_memory_info
-        get_disk_info
-        get_top_processes
-        printf '}'
-    ) )
+    # Assemble the final JSON string correctly.
+    json_output=$(printf '{%s%s%s%s%s%s}' \
+      "$(get_os_info)" \
+      "$(get_hardware_info)" \
+      "$(get_performance_info)" \
+      "$(get_memory_info)" \
+      "$(get_disk_info)" \
+      "$(get_top_processes)" \
+    )
 
     # Encode the final JSON and print it to stdout
     encode_and_output "$json_output"
