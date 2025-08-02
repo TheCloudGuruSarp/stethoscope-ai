@@ -24,7 +24,8 @@
             transition: background-color 0.3s;
         }
         .btn-primary:hover { background-color: #0284c7; }
-        .report-content h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; }
+        .report-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #374151;}
+        .report-content h3 { font-size: 1.25rem; font-weight: 700; }
         .report-content p { margin-top: 0.5rem; line-height: 1.6; }
         .report-content code { background-color: #374151; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: 'Courier New', Courier, monospace; }
         .report-content pre { background-color: #1f2937; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; overflow-x: auto; }
@@ -115,6 +116,9 @@
         const chartTextPlugin = {
             id: 'chartTextPlugin',
             beforeDraw(chart) {
+                if (!chart.config.options.plugins.chartTextPlugin || !chart.config.options.plugins.chartTextPlugin.text) {
+                    return;
+                }
                 const { width, height, ctx } = chart;
                 const text = chart.config.options.plugins.chartTextPlugin.text;
                 ctx.restore();
@@ -167,7 +171,7 @@
             // Disk Charts
             const diskContainer = document.getElementById('disk-charts-container');
             diskContainer.innerHTML = '';
-            data.disk_usage.forEach((disk, index) => {
+            data.disk_usage.forEach((disk) => {
                 const diskUsagePercent = parseInt(disk.use_percent.replace('%', ''));
                 const diskHtml = `
                     <div class="w-full">
@@ -233,42 +237,39 @@
 
                 const result = await response.json();
                 
-                let htmlReport = marked.parse(result.report);
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = htmlReport;
-                
-                tempDiv.querySelectorAll('h3').forEach(h3 => {
-                    let card = document.createElement('div');
-                    card.className = 'issue-card';
-                    if (h3.innerText.includes('🔴')) {
-                        card.classList.add('critical');
-                    } else if (h3.innerText.includes('🟡')) {
-                        card.classList.add('warning');
-                    }
-                    
-                    let contentContainer = document.createElement('div');
-                    let sibling = h3.nextElementSibling;
-                    while(sibling && sibling.tagName !== 'H3') {
-                        contentContainer.appendChild(sibling.cloneNode(true));
-                        sibling = sibling.nextElementSibling;
-                    }
-                    
-                    card.appendChild(h3);
-                    card.appendChild(contentContainer);
-                    
-                    let parent = tempDiv.querySelector('h3').parentElement;
-                    if(parent) {
-                        parent.insertBefore(card, tempDiv.querySelector('h3'));
-                        tempDiv.querySelector('h3').remove();
-                        while(contentContainer.firstChild) {
-                            contentContainer.firstChild.remove();
+                // --- NEW, ROBUST REPORT RENDERING LOGIC ---
+                const htmlReport = marked.parse(result.report);
+                const sourceDiv = document.createElement('div');
+                sourceDiv.innerHTML = htmlReport;
+
+                const finalReportContainer = document.createElement('div');
+                let currentCard = null;
+
+                Array.from(sourceDiv.children).forEach(el => {
+                    if (el.tagName === 'H3') {
+                        // When a new H3 is found, it's the start of a new issue card.
+                        currentCard = document.createElement('div');
+                        currentCard.className = 'issue-card';
+                        if (el.innerText.includes('🔴')) {
+                            currentCard.classList.add('critical');
+                        } else if (el.innerText.includes('🟡')) {
+                            currentCard.classList.add('warning');
                         }
+                        currentCard.appendChild(el); // Add the h3 itself to the card
+                        finalReportContainer.appendChild(currentCard);
+                    } else if (currentCard) {
+                        // If we are "inside" a card, append subsequent elements to it.
+                        currentCard.appendChild(el);
+                    } else {
+                        // If not inside a card (e.g., the H2 "Executive Summary"), append directly.
+                        finalReportContainer.appendChild(el);
                     }
                 });
-                reportContentWrapper.innerHTML = tempDiv.innerHTML;
+
+                reportContentWrapper.innerHTML = finalReportContainer.innerHTML;
 
             } catch (error) {
-                reportContentWrapper.innerHTML = `<p class="text-red-400 p-6"><strong>Analysis Failed:</strong> ${error.message}</p>`;
+                reportContentWrapper.innerHTML = `<div class="p-6"><p class="text-red-400"><strong>Analysis Failed:</strong> ${error.message}</p></div>`;
             } finally {
                 loadingIndicator.style.display = 'none';
                 reportContentWrapper.classList.remove('hidden');
