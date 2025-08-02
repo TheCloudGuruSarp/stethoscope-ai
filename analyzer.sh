@@ -1,7 +1,7 @@
 #!/bin/bash
-# Stethoscope AI - Secure Snapshot Script v3.1
+# Stethoscope AI - Secure Snapshot Script v3.2
 # This script is read-only and outputs Base64 encoded JSON.
-# Fix: Correctly assembles the final JSON object to be valid.
+# Fix: Added total system CPU utilization.
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
@@ -15,7 +15,6 @@ encode_and_output() {
 }
 
 # --- DATA COLLECTION FUNCTIONS ---
-# Each function now prints a JSON key-value pair WITH a trailing comma.
 
 get_os_info() {
     printf '"os_info": {'
@@ -37,10 +36,14 @@ get_hardware_info() {
 }
 
 get_performance_info() {
+    # Get total CPU usage percentage from `top`
+    local cpu_idle=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
+    
     printf '"performance": {'
     printf '"load_average": "%s",' "$(cat /proc/loadavg | awk '{print $1, $2, $3}')"
     printf '"uptime_seconds": %s,' "$(cat /proc/uptime | awk '{print $1}')"
-    printf '"running_processes": %s' "$(ps -e --no-headers | wc -l)"
+    printf '"running_processes": %s,' "$(ps -e --no-headers | wc -l)"
+    printf '"cpu_usage_percent": %.1f' "$cpu_idle"
     printf '},'
 }
 
@@ -74,7 +77,8 @@ get_disk_info() {
 get_top_processes() {
     # This is the LAST data function, so it should NOT have a trailing comma.
     printf '"top_processes": ['
-    ps_output=$(ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | head -n 6 | tail -n 5 && ps -eo pid,user,%cpu,%mem,comm --sort=-%mem | head -n 6 | tail -n 5)
+    # Get unique top 5 CPU and top 5 Memory processes
+    ps_output=$( (ps -eo pid,user,%cpu,%mem,comm --sort=-%cpu | head -n 6; ps -eo pid,user,%cpu,%mem,comm --sort=-%mem | head -n 6) | tail -n +2 | sort -u -k1,1n)
     
     first_line=true
     echo "$ps_output" | while read -r line; do
