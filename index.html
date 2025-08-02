@@ -86,7 +86,7 @@
                     <div class="mb-12">
                         <h3 class="text-xl font-semibold text-white mb-2">Step 1: Copy this command</h3>
                         <div class="code-block rounded-lg p-4 flex items-center justify-between">
-                            <pre><code class="text-gray-300">curl -sSL https://get.stethoscope.ai/analyzer.sh | bash</code></pre>
+                            <pre><code class="text-gray-300">curl -sSL https://stethoscope-ai.netlify.app/analyzer.sh | bash</code></pre>
                             <button onclick="copyCommand()" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">Copy</button>
                         </div>
                     </div>
@@ -120,7 +120,7 @@
 
     <script>
         function copyCommand() {
-            const command = 'curl -sSL https://get.stethoscope.ai/analyzer.sh | bash';
+            const command = 'curl -sSL https://stethoscope-ai.netlify.app/analyzer.sh | bash';
             navigator.clipboard.writeText(command).then(() => {
                 alert('Command copied to clipboard!');
             }, (err) => {
@@ -152,7 +152,7 @@
 
             // --- API Call ---
             // IMPORTANT: Replace with your actual backend API endpoint
-            const API_ENDPOINT = 'http://127.0.0.1:8000/api/v1/analyze';
+            const API_ENDPOINT = 'https://stethoscope-ai-backend.onrender.com/api/v1/analyze';
 
             try {
                 const response = await fetch(API_ENDPOINT, {
