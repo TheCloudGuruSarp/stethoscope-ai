@@ -1,8 +1,5 @@
-# main.py v3.0
-# To run this:
-# 1. pip install "fastapi[all]" uvicorn python-dotenv google-generativeai
-# 2. Create a .env file with your GEMINI_API_KEY
-# 3. Run in terminal: uvicorn main:app --reload
+# main.py v4.0
+# New Feature: Processes security data and requests a security score from the AI.
 
 import base64
 import json
@@ -17,12 +14,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI(
-    title="Stethoscope AI API (v3.0)",
-    description="The backend service that analyzes encoded server data with improved reporting.",
-    version="3.0.0"
+    title="Stethoscope AI API (v4.0)",
+    description="The backend service that analyzes performance and security data.",
+    version="4.0.0"
 )
 
-# --- CORS Middleware ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,12 +40,12 @@ class AnalyzeRequest(BaseModel):
 
 # --- CORE LOGIC ---
 def get_ai_synthesis(data: dict) -> str:
-    """Uses Gemini to get a deep analysis and recommendations with improved formatting."""
+    """Uses Gemini to get a deep analysis, including a security score."""
     
-    # --- UPDATED PROMPT ---
+    # --- UPDATED PROMPT WITH SECURITY FOCUS ---
     prompt = f"""
-    You are "Stethoscope AI", a world-class Linux System Administrator.
-    Your task is to analyze the following server data and provide a concise, actionable health report in Markdown format.
+    You are "Stethoscope AI", an expert Linux System Administrator and Security Analyst.
+    Your task is to analyze the following server data and provide a comprehensive health and security report in Markdown format.
 
     RAW SERVER DATA (in JSON format):
     ```json
@@ -58,14 +54,14 @@ def get_ai_synthesis(data: dict) -> str:
 
     INSTRUCTIONS FOR YOUR RESPONSE:
     1.  Start with a brief "## Executive Summary" of the server's overall health.
-    2.  Identify all potential issues. For each issue, create a new section.
-    3.  For CRITICAL issues (e.g., service down, disk almost full, extreme load), start the heading with a red circle emoji and level 3 markdown heading, like this: `### 🔴 Critical Issue Title`.
-    4.  For WARNINGS or recommendations (e.g., high load, potential misconfiguration), start the heading with a yellow circle emoji, like this: `### 🟡 Warning Title`.
-    5.  Under each issue's heading, provide two sub-sections using bold markdown:
-        - **Root Cause Analysis:** Explain WHY the issue is happening by correlating different data points from the JSON. Be specific.
-        - **Solution:** Provide clear, copy-pasteable commands or step-by-step instructions to help the user fix the problem.
-    6.  If you find no significant issues, the entire report should just be a single "## ✅ All Systems Normal" section with a brief, positive summary.
-    7.  The tone must be professional, clear, and reassuring. Do not wrap your entire response in a single markdown code block.
+    2.  **NEW:** Create a "## 🛡️ Security Analysis" section. Based on the `security` object in the JSON, calculate a "Security Score" from 0 to 100. Display it like: `(Score: 75/100)`. Then, list your security findings.
+    3.  For each security issue (e.g., PermitRootLogin is yes, Firewall is inactive), create a level 3 heading starting with 🔴 (Critical) or 🟡 (Warning).
+    4.  Create a "## 🩺 Performance Analysis" section. List any performance issues you find here, using the same 🔴 and 🟡 emoji format.
+    5.  For every issue (both security and performance), provide two sub-sections:
+        - **Root Cause Analysis:** Explain WHY it's an issue.
+        - **Solution:** Provide clear, copy-pasteable commands or step-by-step instructions to fix it.
+    6.  If you find no issues at all, the report should just be a single "## ✅ All Systems Normal" section.
+    7.  The tone must be professional, clear, and reassuring.
     """
     
     try:
@@ -77,9 +73,6 @@ def get_ai_synthesis(data: dict) -> str:
 # --- API ENDPOINT ---
 @app.post("/api/v1/analyze")
 async def analyze_server(request: AnalyzeRequest):
-    """
-    Receives Base64 encoded data, decodes it, analyzes it with AI, and returns a report.
-    """
     try:
         decoded_bytes = base64.b64decode(request.data)
         server_data = json.loads(decoded_bytes.decode('utf-8'))
