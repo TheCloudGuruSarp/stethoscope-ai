@@ -9,8 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+        html { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background-color: #111827; color: #d1d5db; }
-        .btn-primary { background-color: #0ea5e9; color: #ffffff; transition: background-color: 0.3s; }
+        .btn-primary { background-color: #0ea5e9; color: #ffffff; transition: background-color 0.3s; }
         .btn-primary:hover { background-color: #0284c7; }
         .report-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #374151;}
         .report-content h3 { font-size: 1.25rem; font-weight: 700; }
@@ -43,7 +44,7 @@
         <!-- THE TOOL SECTION -->
         <section id="analyzer-tool" class="py-12">
             <div class="container mx-auto px-6 max-w-4xl">
-                <div class="bg-gray-800 p-8 rounded-lg">
+                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl">
                     <div class="mb-8">
                         <h3 class="text-xl font-semibold text-white mb-2">Step 1: Copy this command</h3>
                         <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 flex items-center justify-between">
@@ -121,7 +122,42 @@
                 </section>
             </div>
         </div>
+        
+        <!-- FAQ SECTION -->
+        <section id="faq" class="py-20 bg-gray-900">
+            <div class="container mx-auto px-6 max-w-4xl">
+                <h2 class="text-3xl font-bold text-center text-white mb-12">Frequently Asked Questions</h2>
+                <div class="space-y-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Why use Stethoscope AI instead of traditional monitoring tools?</h3>
+                        <p class="mt-2 text-gray-400">Traditional tools are great for continuous monitoring, but they often tell you *what* is wrong, not *why*. Stethoscope AI is your on-demand expert for when alarms go off. It performs a deep, holistic analysis to find the root cause of complex problems, providing clear explanations and solutions that save you hours of troubleshooting.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Is it safe to run the script on my production server?</h3>
+                        <p class="mt-2 text-gray-400">Absolutely. Security is our highest priority. The script is **100% read-only** and agentless. It never installs anything and never makes any changes to your system. It simply reads standard system files, much like you would with commands like `top` or `df`. You can even inspect the script's code before running it for complete peace of mind.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">What does "AI-Powered" actually mean here?</h3>
+                        <p class="mt-2 text-gray-400">It means we go beyond simple data presentation. After gathering the metrics, we feed them to a powerful Large Language Model (Google's Gemini). The AI acts as an expert system administrator, correlating seemingly unrelated data points, identifying security risks based on context, and generating human-readable reports with actionable solutions, not just raw data.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">Do you store any of my server's data?</h3>
+                        <p class="mt-2 text-gray-400">No. We have a strict **no-storage policy**. The snapshot data you paste is sent over a secure HTTPS connection, processed in-memory by our backend to generate your report, and then immediately discarded. Your server's information never touches a database on our end.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white">How is this different from running `top`, `df`, and `ps` myself?</h3>
+                        <p class="mt-2 text-gray-400">While you can gather this data yourself, Stethoscope AI's value is in its speed, correlation, and expertise. It automates the entire data collection process, analyzes dozens of data points simultaneously, and uses its AI engine to find connections a human might miss. It turns hours of manual work into a 60-second task, providing not just data, but a complete diagnosis and a treatment plan.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
+    
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-center py-6">
+        <p class="text-gray-400 text-sm">Copyright © 2025 Sarper ERKOL. All Rights Reserved.</p>
+    </footer>
+
     <script>
         // --- Chart.js Global Config & Plugins ---
         Chart.defaults.color = '#9ca3af';
