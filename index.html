@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stethoscope AI - Instant Server Diagnostics</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩺</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -24,6 +26,19 @@
         .issue-card { background-color: #1f2937; border: 1px solid #374151; border-left-width: 4px; padding: 1.5rem; margin-top: 1.5rem; border-radius: 0.5rem; }
         .issue-card.critical { border-left-color: #f87171; }
         .issue-card.warning { border-left-color: #facc15; }
+        
+        /* Accordion Styles */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .accordion-arrow {
+            transition: transform 0.3s ease-in-out;
+        }
+        .accordion-arrow.open {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -44,12 +59,12 @@
         <!-- THE TOOL SECTION -->
         <section id="analyzer-tool" class="py-12">
             <div class="container mx-auto px-6 max-w-4xl">
-                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl">
+                <div class="bg-gray-800 p-6 md:p-8 rounded-lg shadow-2xl">
                     <div class="mb-8">
                         <h3 class="text-xl font-semibold text-white mb-2">Step 1: Copy this command</h3>
-                        <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 flex items-center justify-between">
-                            <pre><code class="text-gray-300">curl -sSL https://your-netlify-site.netlify.app/analyzer.sh | bash</code></pre>
-                            <button onclick="copyCommand()" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">Copy</button>
+                        <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <pre class="w-full overflow-x-auto"><code class="text-gray-300">curl -sSL https://your-netlify-site.netlify.app/analyzer.sh | bash</code></pre>
+                            <button onclick="copyCommand()" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded w-full sm:w-auto flex-shrink-0">Copy</button>
                         </div>
                     </div>
                     <div>
@@ -127,27 +142,8 @@
         <section id="faq" class="py-20 bg-gray-900">
             <div class="container mx-auto px-6 max-w-4xl">
                 <h2 class="text-3xl font-bold text-center text-white mb-12">Frequently Asked Questions</h2>
-                <div class="space-y-8">
-                    <div>
-                        <h3 class="text-xl font-semibold text-white">Why use Stethoscope AI instead of traditional monitoring tools?</h3>
-                        <p class="mt-2 text-gray-400">Traditional tools are great for continuous monitoring, but they often tell you *what* is wrong, not *why*. Stethoscope AI is your on-demand expert for when alarms go off. It performs a deep, holistic analysis to find the root cause of complex problems, providing clear explanations and solutions that save you hours of troubleshooting.</p>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-white">Is it safe to run the script on my production server?</h3>
-                        <p class="mt-2 text-gray-400">Absolutely. Security is our highest priority. The script is **100% read-only** and agentless. It never installs anything and never makes any changes to your system. It simply reads standard system files, much like you would with commands like `top` or `df`. You can even inspect the script's code before running it for complete peace of mind.</p>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-white">What does "AI-Powered" actually mean here?</h3>
-                        <p class="mt-2 text-gray-400">It means we go beyond simple data presentation. After gathering the metrics, we feed them to a powerful Large Language Model (Google's Gemini). The AI acts as an expert system administrator, correlating seemingly unrelated data points, identifying security risks based on context, and generating human-readable reports with actionable solutions, not just raw data.</p>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-white">Do you store any of my server's data?</h3>
-                        <p class="mt-2 text-gray-400">No. We have a strict **no-storage policy**. The snapshot data you paste is sent over a secure HTTPS connection, processed in-memory by our backend to generate your report, and then immediately discarded. Your server's information never touches a database on our end.</p>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-white">How is this different from running `top`, `df`, and `ps` myself?</h3>
-                        <p class="mt-2 text-gray-400">While you can gather this data yourself, Stethoscope AI's value is in its speed, correlation, and expertise. It automates the entire data collection process, analyzes dozens of data points simultaneously, and uses its AI engine to find connections a human might miss. It turns hours of manual work into a 60-second task, providing not just data, but a complete diagnosis and a treatment plan.</p>
-                    </div>
+                <div id="accordion-container" class="space-y-4">
+                    <!-- Accordion items will be injected by JS -->
                 </div>
             </div>
         </section>
@@ -328,6 +324,76 @@
                 analyzeButton.textContent = 'Analyze My Server';
             }
         }
+        
+        // --- FAQ Accordion ---
+        const faqData = [
+            {
+                question: "Why use Stethoscope AI instead of traditional monitoring tools?",
+                answer: "Traditional tools are great for continuous monitoring, but they often tell you *what* is wrong, not *why*. Stethoscope AI is your on-demand expert for when alarms go off. It performs a deep, holistic analysis to find the root cause of complex problems, providing clear explanations and solutions that save you hours of troubleshooting."
+            },
+            {
+                question: "Is it safe to run the script on my production server?",
+                answer: "Absolutely. Security is our highest priority. The script is **100% read-only** and agentless. It never installs anything and never makes any changes to your system. It simply reads standard system files, much like you would with commands like `top` or `df`. You can even inspect the script's code before running it for complete peace of mind."
+            },
+            {
+                question: "What does \"AI-Powered\" actually mean here?",
+                answer: "It means we go beyond simple data presentation. After gathering the metrics, we feed them to a powerful Large Language Model (Google's Gemini). The AI acts as an expert system administrator, correlating seemingly unrelated data points, identifying security risks based on context, and generating human-readable reports with actionable solutions, not just raw data."
+            },
+            {
+                question: "Do you store any of my server's data?",
+                answer: "No. We have a strict **no-storage policy**. The snapshot data you paste is sent over a secure HTTPS connection, processed in-memory by our backend to generate your report, and then immediately discarded. Your server's information never touches a database on our end."
+            },
+            {
+                question: "How is this different from running `top`, `df`, and `ps` myself?",
+                answer: "While you can gather this data yourself, Stethoscope AI's value is in its speed, correlation, and expertise. It automates the entire data collection process, analyzes dozens of data points simultaneously, and uses its AI engine to find connections a human might miss. It turns hours of manual work into a 60-second task, providing not just data, but a complete diagnosis and a treatment plan."
+            }
+        ];
+
+        const accordionContainer = document.getElementById('accordion-container');
+        faqData.forEach(item => {
+            const accordionItem = document.createElement('div');
+            accordionItem.className = 'bg-gray-800 rounded-lg';
+            
+            const button = document.createElement('button');
+            button.className = 'w-full flex justify-between items-center p-4 text-left';
+            button.innerHTML = `
+                <span class="text-lg font-semibold text-white">${item.question}</span>
+                <svg class="accordion-arrow w-6 h-6 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            `;
+            
+            const content = document.createElement('div');
+            content.className = 'accordion-content';
+            
+            // NEW: Create a wrapper for padding to ensure correct height calculation
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'text-gray-400 p-4 pt-0';
+            contentWrapper.innerHTML = marked.parse(item.answer);
+            content.appendChild(contentWrapper);
+            
+            button.addEventListener('click', () => {
+                const isOpen = content.style.maxHeight;
+                
+                // Close all other open accordions
+                accordionContainer.querySelectorAll('.accordion-content').forEach(openContent => {
+                    openContent.style.maxHeight = null;
+                    openContent.previousElementSibling.querySelector('.accordion-arrow').classList.remove('open');
+                });
+
+                // Toggle the clicked accordion
+                if (isOpen) {
+                    content.style.maxHeight = null;
+                    button.querySelector('.accordion-arrow').classList.remove('open');
+                } else {
+                    button.querySelector('.accordion-arrow').classList.add('open');
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+            
+            accordionItem.appendChild(button);
+            accordionItem.appendChild(content);
+            accordionContainer.appendChild(accordionItem);
+        });
+
     </script>
 </body>
 </html>
