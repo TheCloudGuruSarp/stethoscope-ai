@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 [Adınızı veya Şirket Adınızı Buraya Yazın]
+Copyright (c) 2025 SARPER ERKOL
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
