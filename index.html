@@ -10,7 +10,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #111827; color: #d1d5db; }
-        .btn-primary { background-color: #0ea5e9; color: #ffffff; transition: background-color 0.3s; }
+        .btn-primary { background-color: #0ea5e9; color: #ffffff; transition: background-color: 0.3s; }
         .btn-primary:hover { background-color: #0284c7; }
         .report-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #374151;}
         .report-content h3 { font-size: 1.25rem; font-weight: 700; }
@@ -62,27 +62,50 @@
 
         <!-- RESULTS WRAPPER (Initially Hidden) -->
         <div id="results-wrapper" class="hidden">
-             <div class="container mx-auto px-6 max-w-6xl py-20">
+             <div class="container mx-auto px-6 max-w-7xl py-20">
                 <!-- INSTANT METRICS -->
                 <section id="metrics-section" class="mb-16">
                     <h2 class="text-3xl font-bold text-center text-white mb-8">Instant Metrics Snapshot</h2>
-                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                         <div class="bg-gray-800 p-4 rounded-lg text-center">
-                            <p class="text-sm text-gray-400">Operating System</p>
-                            <p id="metric-os" class="text-lg font-semibold text-white">-</p>
-                         </div>
-                         <div class="bg-gray-800 p-4 rounded-lg text-center">
-                            <p class="text-sm text-gray-400">Kernel Version</p>
-                            <p id="metric-kernel" class="text-lg font-semibold text-white">-</p>
-                         </div>
-                         <div class="bg-gray-800 p-4 rounded-lg text-center">
-                            <p class="text-sm text-gray-400">Hostname</p>
-                            <p id="metric-hostname" class="text-lg font-semibold text-white">-</p>
-                         </div>
-                          <div class="bg-gray-800 p-4 rounded-lg text-center">
-                            <p class="text-sm text-gray-400">Uptime</p>
-                            <p id="metric-uptime" class="text-lg font-semibold text-white">-</p>
-                         </div>
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <!-- Left Column: Info Cards -->
+                        <div class="lg:col-span-1 bg-gray-800 p-6 rounded-lg space-y-4">
+                            <h3 class="text-xl font-bold text-white text-center mb-4">System Information</h3>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-400">Operating System</p>
+                                <p id="metric-os" class="text-lg font-semibold text-white">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-400">Kernel Version</p>
+                                <p id="metric-kernel" class="text-lg font-semibold text-white">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-400">Hostname</p>
+                                <p id="metric-hostname" class="text-lg font-semibold text-white">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-gray-400">Uptime</p>
+                                <p id="metric-uptime" class="text-lg font-semibold text-white">-</p>
+                            </div>
+                        </div>
+                        <!-- Right Column: Graphs -->
+                        <div class="lg:col-span-2 bg-gray-800 p-6 rounded-lg">
+                             <div class="grid md:grid-cols-2 gap-8">
+                                 <!-- CPU & Memory -->
+                                 <div class="flex flex-col items-center">
+                                     <h3 class="text-xl font-bold text-white mb-4">CPU Utilization</h3>
+                                     <div class="w-48 h-48 relative"><canvas id="cpuChart"></canvas></div>
+                                 </div>
+                                 <div class="flex flex-col items-center">
+                                     <h3 class="text-xl font-bold text-white mb-4">Memory Usage</h3>
+                                     <div class="w-48 h-48 relative"><canvas id="memChart"></canvas></div>
+                                 </div>
+                             </div>
+                             <!-- Disk -->
+                             <div class="mt-8">
+                                 <h3 class="text-xl font-bold text-white text-center mb-4">Disk Usage</h3>
+                                 <div id="disk-charts-container" class="space-y-4"></div>
+                             </div>
+                        </div>
                     </div>
                 </section>
                 <!-- AI REPORT -->
@@ -100,12 +123,39 @@
         </div>
     </main>
     <script>
-        // --- API & Config ---
+        // --- Chart.js Global Config & Plugins ---
+        Chart.defaults.color = '#9ca3af';
+        Chart.defaults.borderColor = '#374151';
+        const chartTextPlugin = {
+            id: 'chartTextPlugin',
+            beforeDraw(chart) {
+                if (!chart.config.options.plugins.chartTextPlugin || !chart.config.options.plugins.chartTextPlugin.text) return;
+                const { width, height, ctx } = chart;
+                const text = chart.config.options.plugins.chartTextPlugin.text;
+                ctx.restore();
+                ctx.font = 'bold 24px Inter';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#e5e7eb';
+                const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                const textY = height / 2;
+                ctx.fillText(text, textX, textY);
+                ctx.save();
+            }
+        };
+
+        // --- Global State ---
+        let chartInstances = {};
         const API_ENDPOINT = 'https://stethoscope-ai-backend.onrender.com'; // Use your Render URL
 
+        // --- Helper Functions ---
         function copyCommand() {
             const command = document.querySelector('code').innerText;
             navigator.clipboard.writeText(command).then(() => alert('Command copied!'), () => alert('Failed to copy.'));
+        }
+
+        function destroyCharts() {
+            Object.values(chartInstances).forEach(chart => chart.destroy());
+            chartInstances = {};
         }
 
         function updateMetrics(data) {
@@ -117,7 +167,50 @@
             const hours = Math.floor((up % 86400) / 3600);
             document.getElementById('metric-uptime').textContent = `${days}d ${hours}h`;
         }
-        
+
+        function createCharts(data) {
+            destroyCharts();
+
+            // CPU Chart
+            const cpuUsage = parseFloat(data.performance.cpu_usage_percent) || 0;
+            chartInstances.cpu = new Chart(document.getElementById('cpuChart'), {
+                type: 'doughnut',
+                data: { datasets: [{ data: [cpuUsage, 100 - cpuUsage], backgroundColor: ['#ef4444', '#374151'], borderColor: '#1f2937', cutout: '70%' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, chartTextPlugin: { text: `${cpuUsage.toFixed(1)}%` } } },
+                plugins: [chartTextPlugin]
+            });
+
+            // Memory Chart
+            const memUsed = data.memory.total_kb - data.memory.available_kb;
+            const memTotal = data.memory.total_kb;
+            const memUsagePercent = memTotal > 0 ? (memUsed / memTotal * 100) : 0;
+            chartInstances.mem = new Chart(document.getElementById('memChart'), {
+                type: 'doughnut',
+                data: { datasets: [{ data: [memUsagePercent, 100 - memUsagePercent], backgroundColor: ['#f59e0b', '#374151'], borderColor: '#1f2937', cutout: '70%' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, chartTextPlugin: { text: `${memUsagePercent.toFixed(1)}%` } } },
+                plugins: [chartTextPlugin]
+            });
+            
+            // Disk Charts
+            const diskContainer = document.getElementById('disk-charts-container');
+            diskContainer.innerHTML = '';
+            data.disk_usage.forEach((disk) => {
+                const diskUsagePercent = parseInt(disk.use_percent.replace('%', ''));
+                const diskHtml = `
+                    <div class="w-full">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>${disk.mount_point}</span>
+                            <span>${diskUsagePercent}%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                            <div class="bg-sky-500 h-2.5 rounded-full" style="width: ${diskUsagePercent}%"></div>
+                        </div>
+                    </div>
+                `;
+                diskContainer.innerHTML += diskHtml;
+            });
+        }
+
         function renderReport(reportMarkdown, container) {
             const htmlReport = marked.parse(reportMarkdown);
             const sourceDiv = document.createElement('div');
@@ -142,6 +235,7 @@
             container.appendChild(finalReportContainer);
         }
 
+        // --- Main Function ---
         async function analyzeServer() {
             const encodedData = document.getElementById('snapshot-input').value.trim();
             if (!encodedData) {
@@ -164,6 +258,7 @@
             try {
                 const serverData = JSON.parse(atob(encodedData));
                 updateMetrics(serverData);
+                createCharts(serverData);
             } catch (e) {
                 reportContentWrapper.innerHTML = `<div class="p-6"><p class="text-red-400"><strong>Analysis Failed:</strong> Invalid data format from script.</p></div>`;
                 loadingIndicator.style.display = 'none';
