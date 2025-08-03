@@ -7,190 +7,248 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827;
-            color: #d1d5db;
-        }
-        .hero-bg {
-            background-image: radial-gradient(#1f2937 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        .btn-primary {
-            background-color: #0ea5e9;
-            color: #ffffff;
-            transition: background-color 0.3s;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #d1d5db; }
+        .btn-primary { background-color: #0ea5e9; color: #ffffff; transition: background-color 0.3s; }
         .btn-primary:hover { background-color: #0284c7; }
-        .report-content h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #374151;}
-        .report-content h3 { font-size: 1.25rem; font-weight: 700; }
+        .report-content h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; }
         .report-content p { margin-top: 0.5rem; line-height: 1.6; }
-        .report-content code { background-color: #374151; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: 'Courier New', Courier, monospace; }
+        .report-content code { background-color: #374151; padding: 0.2rem 0.4rem; border-radius: 0.25rem; }
         .report-content pre { background-color: #1f2937; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; overflow-x: auto; }
+        .report-content table { width: 100%; margin-top: 1rem; border-collapse: collapse; }
+        .report-content th, .report-content td { padding: 0.75rem; border: 1px solid #374151; text-align: left; }
+        .report-content th { background-color: #1f2937; }
         .issue-card { background-color: #1f2937; border: 1px solid #374151; border-left-width: 4px; padding: 1.5rem; margin-top: 1.5rem; border-radius: 0.5rem; }
         .issue-card.critical { border-left-color: #f87171; }
         .issue-card.warning { border-left-color: #facc15; }
     </style>
 </head>
 <body class="antialiased">
+    <!-- Main Wrapper -->
+    <div class="flex">
+        <!-- HISTORY SIDEBAR (Initially Hidden) -->
+        <aside id="history-sidebar" class="hidden w-64 bg-gray-900 p-4 space-y-4 h-screen sticky top-0">
+            <h2 class="text-xl font-bold text-white">Analysis History</h2>
+            <div id="history-list" class="space-y-2"></div>
+        </aside>
 
-    <div class="min-h-screen">
-        <!-- HERO SECTION -->
-        <section class="py-20 md:py-32 hero-bg">
-            <div class="container mx-auto px-6 text-center">
-                <h1 class="text-4xl md:text-6xl font-black text-white leading-tight">Instant, AI-Powered Diagnostics <br> for Your <span class="text-sky-400">Linux Server</span>.</h1>
-                <p class="mt-6 text-lg md:text-xl max-w-3xl mx-auto">Go from "Server Down" to "Root Cause Found" in under 60 seconds. Stethoscope AI is your on-demand expert consultant for complex server issues.</p>
-                <a href="#analyzer-tool" class="mt-10 inline-block btn-primary font-bold py-4 px-8 rounded-lg text-lg">Start Analysis Now</a>
-            </div>
-        </section>
-
-        <!-- THE TOOL SECTION -->
-        <section id="analyzer-tool" class="py-20">
-            <div class="container mx-auto px-6 max-w-4xl">
-                <h2 class="text-3xl font-bold text-center text-white">Generate Your Health Report</h2>
-                <div class="mt-12">
-                    <div class="mb-12">
-                        <h3 class="text-xl font-semibold text-white mb-2">Step 1: Copy this command</h3>
-                        <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 flex items-center justify-between">
-                            <pre><code class="text-gray-300">curl -sSL https://your-netlify-site.netlify.app/analyzer.sh | bash</code></pre>
-                            <button onclick="copyCommand()" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">Copy</button>
-                        </div>
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- HEADER -->
+            <header class="p-4 flex justify-between items-center bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10">
+                <div class="text-2xl font-black text-white">Stethoscope <span class="text-sky-400">AI</span></div>
+                <div id="auth-container">
+                    <!-- Google Sign-In Button -->
+                    <div id="g_id_onload"
+                         data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                         data-callback="handleCredentialResponse">
                     </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-white mb-2">Step 2: Paste the output from your terminal below</h3>
-                        <textarea id="snapshot-input" rows="8" class="w-full p-4 rounded-lg bg-gray-900 border border-gray-700 text-gray-300 focus:ring-2 focus:ring-sky-500 focus:outline-none" placeholder="Paste your encoded snapshot output here..."></textarea>
-                        <button onclick="analyzeServer()" id="analyze-button" class="mt-4 w-full btn-primary font-bold py-4 px-8 rounded-lg text-lg">Analyze My Server</button>
+                    <div class="g_id_signin" data-type="standard"></div>
+                    <!-- User Profile / Logout -->
+                    <div id="user-profile" class="hidden items-center gap-3">
+                        <img id="user-pic" class="w-8 h-8 rounded-full" src="" alt="User">
+                        <span id="user-name" class="text-white"></span>
+                        <button onclick="signOut()" class="text-sm text-gray-400 hover:text-white">Sign Out</button>
                     </div>
                 </div>
-            </div>
-        </section>
+            </header>
 
-        <!-- RESULTS WRAPPER (Initially Hidden) -->
-        <div id="results-wrapper" class="hidden">
-            <!-- INSTANT METRICS SECTION -->
-            <section id="metrics-section" class="py-20 bg-gray-900">
-                 <div class="container mx-auto px-6 max-w-6xl">
-                    <h2 class="text-3xl font-bold text-center text-white mb-12">Instant Metrics Snapshot</h2>
-                    <div class="grid md:grid-cols-3 gap-8">
-                        <!-- CPU Card -->
-                        <div class="bg-gray-800 p-6 rounded-lg flex flex-col items-center">
-                            <h3 class="text-xl font-bold text-white mb-4">CPU Utilization</h3>
-                            <div class="w-48 h-48 relative"><canvas id="cpuChart"></canvas></div>
+            <!-- HERO SECTION -->
+            <section class="py-20 md:py-24 text-center">
+                <div class="container mx-auto px-6">
+                    <h1 class="text-4xl md:text-5xl font-black text-white leading-tight">Instant, AI-Powered Diagnostics <br> for Your <span class="text-sky-400">Linux Server</span>.</h1>
+                    <p class="mt-6 text-lg md:text-xl max-w-3xl mx-auto">The expert consultant you need when things go wrong. No agents, no installation, just answers.</p>
+                </div>
+            </section>
+
+            <!-- THE TOOL SECTION -->
+            <section id="analyzer-tool" class="py-12">
+                <div class="container mx-auto px-6 max-w-4xl">
+                    <div class="bg-gray-800 p-8 rounded-lg">
+                        <div class="mb-8">
+                            <h3 class="text-xl font-semibold text-white mb-2">Step 1: Copy this command</h3>
+                            <div class="bg-gray-900 border border-gray-700 rounded-lg p-4 flex items-center justify-between">
+                                <pre><code class="text-gray-300">curl -sSL https://your-netlify-site.netlify.app/analyzer.sh | bash</code></pre>
+                                <button onclick="copyCommand()" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">Copy</button>
+                            </div>
                         </div>
-                        <!-- Memory Card -->
-                        <div class="bg-gray-800 p-6 rounded-lg flex flex-col items-center">
-                            <h3 class="text-xl font-bold text-white mb-4">Memory Usage</h3>
-                            <div class="w-48 h-48 relative"><canvas id="memChart"></canvas></div>
-                        </div>
-                        <!-- Disk Card -->
-                        <div class="bg-gray-800 p-6 rounded-lg">
-                             <h3 class="text-xl font-bold text-white text-center mb-4">Disk Usage</h3>
-                             <div id="disk-charts-container" class="space-y-4"></div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Step 2: Paste the output & Analyze</h3>
+                            <textarea id="snapshot-input" rows="8" class="w-full p-4 rounded-lg bg-gray-900 border border-gray-700 focus:ring-2 focus:ring-sky-500 focus:outline-none" placeholder="Paste your encoded snapshot output here..."></textarea>
+                            <button onclick="analyzeServer()" id="analyze-button" class="mt-4 w-full btn-primary font-bold py-4 px-8 rounded-lg text-lg">Analyze My Server</button>
                         </div>
                     </div>
-                 </div>
+                </div>
             </section>
 
-            <!-- AI REPORT SECTION -->
-            <section id="report-section" class="py-20">
-                 <div class="container mx-auto px-6 max-w-4xl">
-                    <h2 class="text-3xl font-bold text-center text-white mb-8">Your AI-Generated Analysis</h2>
-                    <div id="report-output" class="bg-gray-800 border border-gray-700 rounded-lg">
-                        <div id="loading-indicator" class="text-center p-8">
-                            <svg class="animate-spin h-8 w-8 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            <p class="mt-4 text-lg">Your expert AI is analyzing the data...</p>
+            <!-- RESULTS WRAPPER (Initially Hidden) -->
+            <div id="results-wrapper" class="hidden">
+                 <div class="container mx-auto px-6 max-w-6xl py-20">
+                    <!-- INSTANT METRICS -->
+                    <section id="metrics-section" class="mb-16">
+                        <h2 class="text-3xl font-bold text-center text-white mb-8">Instant Metrics Snapshot</h2>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                             <div class="bg-gray-800 p-4 rounded-lg text-center">
+                                <p class="text-sm text-gray-400">Operating System</p>
+                                <p id="metric-os" class="text-lg font-semibold text-white">-</p>
+                             </div>
+                             <div class="bg-gray-800 p-4 rounded-lg text-center">
+                                <p class="text-sm text-gray-400">Kernel Version</p>
+                                <p id="metric-kernel" class="text-lg font-semibold text-white">-</p>
+                             </div>
+                             <div class="bg-gray-800 p-4 rounded-lg text-center">
+                                <p class="text-sm text-gray-400">Hostname</p>
+                                <p id="metric-hostname" class="text-lg font-semibold text-white">-</p>
+                             </div>
+                              <div class="bg-gray-800 p-4 rounded-lg text-center">
+                                <p class="text-sm text-gray-400">Uptime</p>
+                                <p id="metric-uptime" class="text-lg font-semibold text-white">-</p>
+                             </div>
                         </div>
-                        <div id="report-content-wrapper" class="hidden report-content p-6"></div>
-                     </div>
-                 </div>
-            </section>
-        </div>
+                    </section>
+                    <!-- AI REPORT -->
+                    <section id="report-section">
+                        <h2 class="text-3xl font-bold text-center text-white mb-8">Your AI-Generated Analysis</h2>
+                        <div id="report-output" class="bg-gray-800 border border-gray-700 rounded-lg">
+                            <div id="loading-indicator" class="text-center p-8">
+                                <svg class="animate-spin h-8 w-8 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <p class="mt-4 text-lg">Your expert AI is analyzing the data...</p>
+                            </div>
+                            <div id="report-content-wrapper" class="hidden report-content p-6 md:p-8"></div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
-        // --- Chart.js Global Config & Plugins ---
-        Chart.defaults.color = '#9ca3af';
-        Chart.defaults.borderColor = '#374151';
-        const chartTextPlugin = {
-            id: 'chartTextPlugin',
-            beforeDraw(chart) {
-                if (!chart.config.options.plugins.chartTextPlugin || !chart.config.options.plugins.chartTextPlugin.text) {
-                    return;
-                }
-                const { width, height, ctx } = chart;
-                const text = chart.config.options.plugins.chartTextPlugin.text;
-                ctx.restore();
-                ctx.font = 'bold 24px Inter';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#e5e7eb';
-                const textX = Math.round((width - ctx.measureText(text).width) / 2);
-                const textY = height / 2;
-                ctx.fillText(text, textX, textY);
-                ctx.save();
+        // --- State Management ---
+        let googleIdToken = null;
+
+        // --- API & Config ---
+        const API_ENDPOINT = 'https://stethoscope-ai-backend.onrender.com'; // Use your Render URL
+
+        // --- Authentication ---
+        function handleCredentialResponse(response) {
+            googleIdToken = response.credential;
+            const userProfile = jwt_decode(googleIdToken);
+            
+            document.querySelector('.g_id_signin').classList.add('hidden');
+            const profileDiv = document.getElementById('user-profile');
+            profileDiv.classList.remove('hidden');
+            profileDiv.classList.add('flex');
+            document.getElementById('user-pic').src = userProfile.picture;
+            document.getElementById('user-name').textContent = userProfile.given_name;
+
+            document.getElementById('history-sidebar').classList.remove('hidden');
+            fetchHistory();
+        }
+
+        function signOut() {
+            googleIdToken = null;
+            document.querySelector('.g_id_signin').classList.remove('hidden');
+            document.getElementById('user-profile').classList.add('hidden');
+            document.getElementById('history-sidebar').classList.add('hidden');
+            document.getElementById('history-list').innerHTML = '';
+        }
+
+        function jwt_decode(token) {
+            try {
+                return JSON.parse(atob(token.split('.')[1]));
+            } catch (e) {
+                return null;
             }
-        };
+        }
 
-        // --- Global Chart Instances ---
-        let chartInstances = {};
+        // --- History ---
+        async function fetchHistory() {
+            if (!googleIdToken) return;
+            try {
+                const res = await fetch(`${API_ENDPOINT}/api/v1/history`, {
+                    headers: { 'Authorization': `Bearer ${googleIdToken}` }
+                });
+                if (!res.ok) throw new Error('Failed to fetch history.');
+                const history = await res.json();
+                const historyList = document.getElementById('history-list');
+                historyList.innerHTML = '';
+                history.forEach(item => {
+                    const date = new Date(item.timestamp).toLocaleString();
+                    const button = document.createElement('button');
+                    button.className = 'w-full text-left p-2 rounded hover:bg-gray-700 text-sm';
+                    button.innerHTML = `<span class="font-semibold text-white">${item.summary}</span><br><span class="text-xs text-gray-400">${date}</span>`;
+                    button.onclick = () => displayReport(item.report);
+                    historyList.appendChild(button);
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        
+        function displayReport(reportHtml) {
+            const resultsWrapper = document.getElementById('results-wrapper');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const reportContentWrapper = document.getElementById('report-content-wrapper');
+            
+            resultsWrapper.classList.remove('hidden');
+            loadingIndicator.style.display = 'none';
+            reportContentWrapper.classList.remove('hidden');
+            renderReport(reportHtml, reportContentWrapper);
+            resultsWrapper.scrollIntoView({ behavior: 'smooth' });
+        }
 
+        // --- Core App Logic ---
         function copyCommand() {
-            const command = document.querySelector('.bg-gray-800 code').innerText;
+            const command = document.querySelector('code').innerText;
             navigator.clipboard.writeText(command).then(() => alert('Command copied!'), () => alert('Failed to copy.'));
         }
 
-        function destroyCharts() {
-            Object.values(chartInstances).forEach(chart => chart.destroy());
-            chartInstances = {};
+        function updateMetrics(data) {
+            document.getElementById('metric-os').textContent = `${data.os_info.distro} ${data.os_info.version}`;
+            document.getElementById('metric-kernel').textContent = data.os_info.kernel;
+            document.getElementById('metric-hostname').textContent = data.os_info.hostname;
+
+            const up = data.performance.uptime_seconds;
+            const days = Math.floor(up / 86400);
+            const hours = Math.floor((up % 86400) / 3600);
+            document.getElementById('metric-uptime').textContent = `${days}d ${hours}h`;
         }
+        
+        function renderReport(reportMarkdown, container) {
+            const htmlReport = marked.parse(reportMarkdown);
+            const sourceDiv = document.createElement('div');
+            sourceDiv.innerHTML = htmlReport;
 
-        function createCharts(data) {
-            destroyCharts();
+            const finalReportContainer = document.createElement('div');
+            let currentCard = null;
 
-            // CPU Chart
-            const cpuUsage = parseFloat(data.performance.cpu_usage_percent) || 0;
-            chartInstances.cpu = new Chart(document.getElementById('cpuChart'), {
-                type: 'doughnut',
-                data: { datasets: [{ data: [cpuUsage, 100 - cpuUsage], backgroundColor: ['#ef4444', '#374151'], borderColor: '#1f2937', cutout: '70%' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, chartTextPlugin: { text: `${cpuUsage.toFixed(1)}%` } } },
-                plugins: [chartTextPlugin]
+            Array.from(sourceDiv.children).forEach(el => {
+                if (el.tagName === 'H3') {
+                    currentCard = document.createElement('div');
+                    currentCard.className = 'issue-card';
+                    if (el.innerText.includes('🔴')) currentCard.classList.add('critical');
+                    if (el.innerText.includes('🟡')) currentCard.classList.add('warning');
+                    currentCard.appendChild(el);
+                    finalReportContainer.appendChild(currentCard);
+                } else if (currentCard) {
+                    currentCard.appendChild(el);
+                } else {
+                    finalReportContainer.appendChild(el);
+                }
             });
-
-            // Memory Chart
-            const memUsed = data.memory.total_kb - data.memory.available_kb;
-            const memTotal = data.memory.total_kb;
-            const memUsagePercent = memTotal > 0 ? (memUsed / memTotal * 100) : 0;
-            chartInstances.mem = new Chart(document.getElementById('memChart'), {
-                type: 'doughnut',
-                data: { datasets: [{ data: [memUsagePercent, 100 - memUsagePercent], backgroundColor: ['#f59e0b', '#374151'], borderColor: '#1f2937', cutout: '70%' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, chartTextPlugin: { text: `${memUsagePercent.toFixed(1)}%` } } },
-                plugins: [chartTextPlugin]
-            });
-            
-            // Disk Charts
-            const diskContainer = document.getElementById('disk-charts-container');
-            diskContainer.innerHTML = '';
-            data.disk_usage.forEach((disk) => {
-                const diskUsagePercent = parseInt(disk.use_percent.replace('%', ''));
-                const diskHtml = `
-                    <div class="w-full">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span>${disk.mount_point}</span>
-                            <span>${diskUsagePercent}%</span>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2.5">
-                            <div class="bg-sky-500 h-2.5 rounded-full" style="width: ${diskUsagePercent}%"></div>
-                        </div>
-                    </div>
-                `;
-                diskContainer.innerHTML += diskHtml;
-            });
+            container.innerHTML = '';
+            container.appendChild(finalReportContainer);
         }
 
         async function analyzeServer() {
-            const snapshotInput = document.getElementById('snapshot-input');
-            const encodedData = snapshotInput.value.trim();
+            if (!googleIdToken) {
+                alert('Please sign in with Google to analyze your server.');
+                return;
+            }
+            const encodedData = document.getElementById('snapshot-input').value.trim();
             if (!encodedData) {
                 alert('Please paste the snapshot output before analyzing.');
                 return;
@@ -209,24 +267,24 @@
             resultsWrapper.scrollIntoView({ behavior: 'smooth' });
             
             try {
-                const decodedJson = atob(encodedData);
-                const serverData = JSON.parse(decodedJson);
-                createCharts(serverData);
+                const serverData = JSON.parse(atob(encodedData));
+                updateMetrics(serverData);
             } catch (e) {
-                console.error("Failed to decode or parse data for charts:", e);
-                const reportOutput = document.getElementById('report-output');
-                reportOutput.innerHTML = `<div class="p-6"><p class="text-red-400"><strong>Analysis Failed:</strong> Invalid data format. The provided text is not a valid output from the analyzer script.</p></div>`;
+                reportContentWrapper.innerHTML = `<div class="p-6"><p class="text-red-400"><strong>Analysis Failed:</strong> Invalid data format from script.</p></div>`;
+                loadingIndicator.style.display = 'none';
+                reportContentWrapper.classList.remove('hidden');
                 analyzeButton.disabled = false;
                 analyzeButton.textContent = 'Analyze My Server';
                 return;
             }
 
-            const API_ENDPOINT = 'https://stethoscope-ai-backend.onrender.com/api/v1/analyze';
-
             try {
-                const response = await fetch(API_ENDPOINT, {
+                const response = await fetch(`${API_ENDPOINT}/api/v1/analyze`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${googleIdToken}`
+                    },
                     body: JSON.stringify({ data: encodedData }),
                 });
 
@@ -236,37 +294,8 @@
                 }
 
                 const result = await response.json();
-                
-                // --- NEW, ROBUST REPORT RENDERING LOGIC ---
-                const htmlReport = marked.parse(result.report);
-                const sourceDiv = document.createElement('div');
-                sourceDiv.innerHTML = htmlReport;
-
-                const finalReportContainer = document.createElement('div');
-                let currentCard = null;
-
-                Array.from(sourceDiv.children).forEach(el => {
-                    if (el.tagName === 'H3') {
-                        // When a new H3 is found, it's the start of a new issue card.
-                        currentCard = document.createElement('div');
-                        currentCard.className = 'issue-card';
-                        if (el.innerText.includes('🔴')) {
-                            currentCard.classList.add('critical');
-                        } else if (el.innerText.includes('🟡')) {
-                            currentCard.classList.add('warning');
-                        }
-                        currentCard.appendChild(el); // Add the h3 itself to the card
-                        finalReportContainer.appendChild(currentCard);
-                    } else if (currentCard) {
-                        // If we are "inside" a card, append subsequent elements to it.
-                        currentCard.appendChild(el);
-                    } else {
-                        // If not inside a card (e.g., the H2 "Executive Summary"), append directly.
-                        finalReportContainer.appendChild(el);
-                    }
-                });
-
-                reportContentWrapper.innerHTML = finalReportContainer.innerHTML;
+                renderReport(result.report, reportContentWrapper);
+                fetchHistory(); // Refresh history after a new analysis
 
             } catch (error) {
                 reportContentWrapper.innerHTML = `<div class="p-6"><p class="text-red-400"><strong>Analysis Failed:</strong> ${error.message}</p></div>`;
@@ -278,6 +307,5 @@
             }
         }
     </script>
-
 </body>
 </html>
